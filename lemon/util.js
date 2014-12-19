@@ -23,3 +23,26 @@ lemon.util.deepCopy = function(obj) {
 
     return copy;
 };
+
+
+/**
+ * Create an object from the query params.
+ *
+ * @param {string} query The query string.
+ * @return {Object}
+ */
+lemon.util.decodeUrlParams = function(query) {
+    var params = {};
+    var pl = /\+/g;
+    var search = /([^&=]+)=?([^&]*)/g;
+    var decode = function(s) {
+        return decodeURIComponent(s.replace(pl, " "));
+    };
+
+    var match;
+    while (match = search.exec(query)) {
+        params['{' + decode(match[1]) + '}'] = decode(match[2]);
+    }
+
+    return params;
+};

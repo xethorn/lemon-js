@@ -63,8 +63,14 @@ _.extend(lemon.Router.prototype,
      * @return {Object} The description of the view that needs to be loaded.
      */
     reverse: function(url) {
+        var queryPosition = url.indexOf('?');
+        var path = url;
+        if (queryPosition !== -1) {
+            path = url.substring(0, queryPosition);
+        }
+
         var route = _.find(this.routes, function(route) {
-            return url.match(route.rule);
+            return path.match(route.rule);
         });
 
         if (route) {
@@ -139,7 +145,11 @@ lemon.Route = function(route) {
      * Keys of the url.
      * @type {Array.<string>}
      */
-    this.keys = route['keys'] || [];
+    this.keys = /** @type {Array.<string>} */ (_.map(route['keys'] || [],
+        function(key) {
+            key = key.replace(new RegExp('<(.+):'), '<');
+            return key;
+        }));
 
     /**
      * Params of the `lemon.View`.
@@ -171,12 +181,12 @@ _.extend(lemon.Route.prototype,
      */
     populate: function(params, replacements) {
         var clone = {};
-
         _.map(params, function(value, key) {
             if (_.isString(value)) {
                 if (replacements[value]) {
                     clone[key] = replacements[value];
-                } else {
+                } else if (value.length > 2 && value[0] !== '{' &&
+                        value[1] !== '}'){
                     clone[key] = value;
                 }
             } else {
@@ -205,13 +215,23 @@ _.extend(lemon.Route.prototype,
      * Prepare the route.
      */
     prepare: function(url) {
-        var matches = url.match(this.rule);
+        var path = url;
+        var query = '';
+        var queryPosition = url.indexOf('?');
+
+        if (queryPosition !== -1) {
+            path = url.substring(0, queryPosition);
+            query = url.substring(queryPosition + 1);
+        }
+
+        var matches = path.match(this.rule);
         if (!matches) {
             return;
         }
 
         var values = /** @type {Array} */ (_.rest(matches));
         var replacements = _.object(this.keys, values);
+        _.extend(replacements, lemon.util.decodeUrlParams(query));
         return this.populate(this.clone(), replacements);
     }
 });
@@ -249,6 +269,7 @@ lemon.router.EXCEPTION_BAD_URL = 'The url does not match the route.';
  * @return {RegExp} the Regex rule.
  */
 lemon.router.createRule = function(rule) {
+    rule = rule.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp('^' + rule.replace(/<(.*?)>/g, '(.+)') + '$');
 };
 
