@@ -233,6 +233,10 @@ lemon.View = Backbone.View.extend(/** @lends {lemon.View.prototype} */{
             throw 'The url is not defined, the navigation is not possible.';
         }
 
+        if (!url) {
+            return;
+        }
+        
         var view = lemon.router.instance().reverse(url);
         if (!view || force) {
             window.location.href = url;
