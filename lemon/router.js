@@ -162,6 +162,12 @@ lemon.Route = function(route) {
      * @type {Object}
      */
     this.fetch = route['fetch'];
+
+    /**
+     * Access list.
+     * @type {Array.<string>}
+     */
+    this.access = route['access'];
 };
 
 
@@ -207,7 +213,8 @@ _.extend(lemon.Route.prototype,
         return {
             'path': this.view,
             'params': this.params,
-            'fetch': this.fetch
+            'fetch': this.fetch,
+            'access': this.access
         };
     },
 
